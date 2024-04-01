@@ -3,10 +3,11 @@ package main
 import (
 	"encoding/json"
 	"io"
-	"log"
+	"net/http"
 	"net/smtp"
 	"os"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
@@ -17,19 +18,17 @@ type Mailer struct {
 	Password   string
 }
 
-func (m *Mailer) SendEmail(to string, message string) {
+func (m *Mailer) SendEmail(recipient string, message string) error {
 	// 创建邮件
-	msg := []byte("To: " + to + "\r\n" +
-		"Subject: Golang Mail Service \r\n" +
+	msg := []byte("To: " + recipient + "\r\n" +
+		"Subject: Go Mail service\r\n" +
 		"\r\n" +
 		message + "\r\n")
 
 	// 发送邮件
 	auth := smtp.PlainAuth("", m.Sender, m.Password, m.SmtpServer)
-	err := smtp.SendMail(m.SmtpServer+":"+m.Port, auth, m.Sender, []string{to}, msg)
-	if err != nil {
-		log.Fatal(err)
-	}
+	err := smtp.SendMail(m.SmtpServer+":"+m.Port, auth, m.Sender, []string{recipient}, msg)
+	return err
 }
 
 type MailServiceConfig struct {
@@ -71,6 +70,29 @@ func ReadConfig(path string) (*MailServiceConfig, error) {
 	return mail_service_config, nil
 }
 
-func main() {
+type Email struct {
+	To      string
+	Message string
+	Token   string
+}
 
+func main() {
+	app := gin.New()
+	config, _ := ReadConfig("./test/config.json")
+	app.POST("/send_email", func(c *gin.Context) {
+		var email Email
+		if err := c.ShouldBindJSON(&email); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		err := config.Mailer.SendEmail(email.To, email.Message)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"status": "Email sent!"})
+	})
+	app.Run(":8080")
 }

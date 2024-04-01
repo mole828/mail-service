@@ -15,5 +15,5 @@ func TestSend(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	config.Mailer.SendEmail("mrx800@163.com", "smtp test")
+	config.Mailer.SendEmail("example@163.com", "smtp test")
 }
