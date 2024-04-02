@@ -7,7 +7,8 @@ url = "http://localhost:8080/send_email"
 # 邮件的收件人和内容
 data = {
     "To": "example@some.com",
-    "Message": "This is a test email. from python"
+    "Message": "This is a test email. from python",
+    "Token": "",
 }
 
 # 发送POST请求

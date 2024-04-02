@@ -88,6 +88,7 @@ func main() {
 
 		if email.Token != config.Token {
 			c.JSON(http.StatusForbidden, gin.H{"error": "wrong token"})
+			return
 		}
 
 		err := config.Mailer.SendEmail(email.To, email.Message)
